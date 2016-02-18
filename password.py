@@ -1,3 +1,4 @@
+from CharUtils import CharUtils# static methods to help with the madness
 
 class Password(object):
 
@@ -27,13 +28,11 @@ class Password(object):
 		for password in self.dictionary:
 			if len(password) < 8: self.weakDictionary.append(self.weakDictionary)
 
-	def isCommonWord(self): # Brute force method. This is order of n at worse but it's 2 lines :)
-		if self.userPassword in self.dictionary: return True
-		else: return False
+	def isCommonWord(self): # Brute force method. This is order of n at worse but it's 1 line :)
+		return True if self.userPassword in self.dictionary else False
 
 	def isLongEnough(self):#
-		status = True if self.length >= 8 else False
-		return status
+		return True if self.length >= 8 else False
 
 	def countUppercase(self):
 		uppercase = 0
@@ -60,7 +59,7 @@ class Password(object):
 	def countSymbols(self, _str):
 		symbols = 0
 		for char in _str:
-			if not char.isalpha() and not char.isdigit() and char != ' ': # if it isn't a number, alpha, or space, it should be something weird(symbol)
+			if CharUtils.isSymbol(char): # if it isn't a number, alpha, or space, it should be something weird(symbol)
 				symbols += 1
 		return symbols
 	
@@ -87,6 +86,75 @@ class Password(object):
 
 		return requirements
 
+	def onlyLetters(self):
+		deduction = 0
+
+		#if self.symbols + self.numbers == 0: # This is how I think the web version is doing this... counting spaces as letters
+		if self.length == self.uppercase + self.lowercase: # The web version counts spaces as letters which I consider to be broken. This will not count spaces as letters
+			deduction = self.length
+		return deduction
+
+	def onlyNumbers(self):
+		deduction = 0
+
+		if self.length == self.numbers: # 
+			deduction = self.length
+		return deduction
+
+	def repeatChars(self):
+		#todo make this function
+		return 0
+
+	def consecutiveUppercase(self):
+		deduction = 0
+
+		for i in range(len(self.userPassword)-1): # -1 on the range to avoid stepping outside of list
+			if self.userPassword[i].isupper() and self.userPassword[i+1].isupper():
+				deduction += 1
+		return deduction
+
+	def consecutiveLowercase(self):
+		deduction = 0
+
+		for i in range(len(self.userPassword)-1): # -1 on the range to avoid stepping outside of list
+			if self.userPassword[i].islower() and self.userPassword[i+1].islower():
+				deduction += 1
+		return deduction
+
+	def consecutiveNumber(self):
+		deduction = 0
+
+		for i in range(self.length-1): # -1 on the range to avoid stepping outside of list
+			if self.userPassword[i].isdigit() and self.userPassword[i+1].isdigit():
+				deduction += 1
+		return deduction
+
+	def sequencedLetters(self, _str):
+		deduction = 0
+		_str = _str.upper()
+		for i in range(len(_str)-2):
+			if _str[i].isalpha() and ord(_str[i]) == ord(_str[i+1])-1 and ord(_str[i+1]) == ord(_str[i+2])-1: #ord converts char to int
+				deduction += 1
+		return deduction
+
+	def sequencedNumbers(self, _str):
+		deduction = 0
+
+		for i in range(len(_str)-2):
+			if _str[i].isdigit() and _str[i+1].isdigit() and _str[i+2].isdigit(): #all three are digits so wwe can cast without errors
+				if int(_str[i]) == int(_str[i+1])-1 and int(_str[i+1]) == int(_str[i+2])-1: #convert chars to ints if they are digits
+					deduction += 1
+		return deduction
+	
+	def sequencedSymbols(self, _str): #What is a sequential symbol? Ascending ascii? Ascending unicode? No, Only keyboard layout matters
+		deduction = 0
+
+		for i in range(len(_str)-2):
+			if CharUtils.isSymbol2(_str[i]) and CharUtils.isSymbol2(_str[i+1]) and CharUtils.isSymbol2(_str[i+2]): #all three are symbols
+				if CharUtils.numberSymbol[_str[i]] == CharUtils.numberSymbol[_str[i+1]]-1 and CharUtils.numberSymbol[_str[i+1]] == CharUtils.numberSymbol[_str[i+2]]-1: # this is madness. checks dictionary of symbols mapped to ints
+					deduction += 1
+		return deduction
+
 	def getProperties(self):
 		self.lowercase = self.countLowercase()
 		self.uppercase = self.countUppercase()
@@ -94,6 +162,16 @@ class Password(object):
 		self.symbols = self.countSymbols(self.userPassword)
 		self.middleSpecials = self.countMiddleSpecials()
 		self.requirements = self.countRequirements()
+
+		self.lettersOnly = self.onlyLetters()
+		self.numbersOnly = self.onlyNumbers()
+		self.repeats = self.repeatChars()
+		self.consecutiveUpper = self.consecutiveUppercase()
+		self.consecutiveLower = self.consecutiveLowercase()
+		self.consecutiveNum = self.consecutiveNumber()
+		self.sequentialLetters = self.sequencedLetters(self.userPassword)
+		self.sequentialNumbers = self.sequencedNumbers(self.userPassword)
+		self.sequentialSymbols = self.sequencedSymbols(self.userPassword)
 
 
 	def printReport(self):
@@ -104,6 +182,16 @@ class Password(object):
 		print("Symbols: {}".format(self.symbols))
 		print("Middle Specials: {}".format(self.middleSpecials))
 		print("Requirements: {}".format(self.requirements))
+
+		print("Only Letters: {}".format(self.lettersOnly))
+		print("Only Numbers: {}".format(self.numbersOnly))
+		print("Repeat Chars: {}".format(self.repeats))
+		print("Consecutive Uppercase: {}".format(self.consecutiveUpper))
+		print("Consecutive Lowercase: {}".format(self.consecutiveLower))
+		print("Consecutive Numbers: {}".format(self.consecutiveNum))
+		print("Sequential Letters: {}".format(self.sequentialLetters))
+		print("Sequential Numbers: {}".format(self.sequentialNumbers))
+		print("Sequential Symbols: {}".format(self.sequentialSymbols))
 
 
 		print("SCORE: {}".format(self.score))
@@ -125,3 +213,14 @@ class Password(object):
 		self.score += self.middleSpecials*2 # middle numbers/symbols score
 		if self.requirements >= 4: # this bonus only counts if 4 or more requirements are met
 			self.score += self.requirements*2
+
+		#Deductions
+		self.score -= self.lettersOnly
+		self.score -= self.numbersOnly
+		self.score -= self.repeats
+		self.score -= self.consecutiveUpper*2
+		self.score -= self.consecutiveLower*2
+		self.score -= self.consecutiveNum*2
+		self.score -= self.sequentialLetters*3
+		self.score -= self.sequentialNumbers*3
+		self.score -= self.sequentialSymbols*3

@@ -12,6 +12,8 @@ while userInput != "quit":
 
 	if(userPassword.isCommonWord()): 
 		print("Password is a common word")
+		userPassword.calculateScore()
+		userPassword.printReport()
 
 	else:
 		userPassword.calculateScore()
