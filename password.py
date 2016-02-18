@@ -2,11 +2,13 @@ from CharUtils import CharUtils# static methods to help with the madness
 
 class Password(object):
 
-	def __init__(self, _userPassword):
+	def __init__(self):
+		self.getDictionary()
+
+	def setPassword(self, _userPassword):
 		self.userPassword = _userPassword
 		self.length = len(_userPassword)
 		self.score = 0
-
 
 	def getDictionary(self):
 		self.dictionary = [] 
@@ -17,7 +19,7 @@ class Password(object):
 				line = line.strip() # strip endl char
 
 				if len(line) < 8: self.weakDictionary.append(line) # these are words that aren't long enough 
-				else: self.dictionary.append(line)
+				self.dictionary.append(line)
 
 		print("weak: {}".format(len(self.weakDictionary)))
 		print("strong: {}".format(len(self.dictionary)))
@@ -129,7 +131,7 @@ class Password(object):
 				deduction += 1
 		return deduction
 
-	def sequencedLetters(self, _str):
+	def sequencedLetters(self, _str):# check for abcdef if 3 or more
 		deduction = 0
 		_str = _str.upper()
 		for i in range(len(_str)-2):
@@ -137,7 +139,7 @@ class Password(object):
 				deduction += 1
 		return deduction
 
-	def sequencedNumbers(self, _str):
+	def sequencedNumbers(self, _str): # check for 12345 if 3 or more occur
 		deduction = 0
 
 		for i in range(len(_str)-2):
