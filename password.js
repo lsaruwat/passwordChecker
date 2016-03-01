@@ -122,10 +122,11 @@ function chkPass(pwd) {
 					difference of distance between currently selected match
 					*/
 					nRepInc += Math.abs(arrPwdLen/(b-a));
+
 				}
 			}
-			if (bCharExists) { 
-				nRepChar++; 
+			if(bCharExists){ 
+				nRepChar++;
 				nUnqChar = arrPwdLen-nRepChar;
 				nRepInc = (nUnqChar) ? Math.ceil(nRepInc/nUnqChar) : Math.ceil(nRepInc); 
 			}

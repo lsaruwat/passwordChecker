@@ -1,9 +1,10 @@
 from CharUtils import CharUtils# static methods to help with the madness
+import math
 
 class Password(object):
 
 	def __init__(self):
-		self.getDictionary()
+		self.getDictionary()# expensive so do it first
 
 	def setPassword(self, _userPassword):
 		self.userPassword = _userPassword
@@ -76,10 +77,11 @@ class Password(object):
 
 		return middleSpecials
 
-	def countRequirements(self): # this is another weird one. requirements points only kick in after 4 or more are met. requirements are boolean in nature
+	def countRequirements(self): # this is a weird one. requirements points only kick in after 4 or more are met. requirements are boolean in nature
 		requirements = 0
 
 		#this is gross but straightforward... I think
+		if self.length >= 8: requirements+=1
 		if self.lowercase: requirements +=1
 		if self.uppercase: requirements +=1
 		if self.numbers: requirements +=1
@@ -90,9 +92,10 @@ class Password(object):
 
 	def onlyLetters(self):
 		deduction = 0
-
+		noSpaces = self.userPassword.replace(' ', '')
+		print(len(noSpaces) , " ", self.uppercase + self.lowercase)
 		#if self.symbols + self.numbers == 0: # This is how I think the web version is doing this... counting spaces as letters
-		if self.length == self.uppercase + self.lowercase: # The web version counts spaces as letters which I consider to be broken. This will not count spaces as letters
+		if len(noSpaces) == self.uppercase + self.lowercase: # The web version counts spaces as letters which I consider to be broken. This will not count spaces as letters
 			deduction = self.length
 		return deduction
 
@@ -103,9 +106,34 @@ class Password(object):
 			deduction = self.length
 		return deduction
 
-	def repeatChars(self):
-		#todo make this function
-		return 0
+	def repeatChars(self, _str):
+		deduction = 0
+		numRepititionIncrement = 0
+		numRepChar = 0
+		noSpaces = _str.replace(' ', '') # strip whitespace
+
+		for i in range(len(noSpaces)):
+			charExists = False
+			for j in range(len(noSpaces)):
+				
+				if noSpaces[i] == noSpaces[j] and j != i:
+					charExists = True
+					numRepititionIncrement += abs(len(noSpaces)/(j-i))
+
+			if charExists: 
+				numRepChar+=1
+				numUniqueChar = len(noSpaces) - numRepChar;
+				##numRepititionIncrement = (nUnqChar) ? Math.ceil(nRepInc/nUnqChar) : Math.ceil(nRepInc)
+
+				if numUniqueChar != 0:
+					numRepititionIncrement = numUniqueChar
+					math.ceil(numRepititionIncrement/numUniqueChar)
+
+				else: math.ceil(numRepititionIncrement)
+
+			print("num Rep = ".format(numRepititionIncrement))
+		
+		return numRepititionIncrement
 
 	def consecutiveUppercase(self):
 		deduction = 0
@@ -167,14 +195,13 @@ class Password(object):
 
 		self.lettersOnly = self.onlyLetters()
 		self.numbersOnly = self.onlyNumbers()
-		self.repeats = self.repeatChars()
+		self.repeats = self.repeatChars(self.userPassword)
 		self.consecutiveUpper = self.consecutiveUppercase()
 		self.consecutiveLower = self.consecutiveLowercase()
 		self.consecutiveNum = self.consecutiveNumber()
 		self.sequentialLetters = self.sequencedLetters(self.userPassword)
 		self.sequentialNumbers = self.sequencedNumbers(self.userPassword)
 		self.sequentialSymbols = self.sequencedSymbols(self.userPassword)
-
 
 	def printReport(self):
 		print("Length: {}".format(self.length))

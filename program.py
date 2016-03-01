@@ -3,6 +3,8 @@ from password import Password
 
 userInput = ''
 userPassword = Password()
+
+
 while userInput != "quit":
 	userInput = input("Enter Password\n")
 
