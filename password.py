@@ -1,10 +1,10 @@
-from CharUtils import CharUtils# static methods to help with the madness
+from CharUtils import CharUtils # static methods to help with the madness
 import math
 
 class Password(object):
 
 	def __init__(self):
-		self.getDictionary()# expensive so do it first
+		self.getIndexedDictionary()# expensive so do it first
 
 	def setPassword(self, _userPassword):
 		self.userPassword = _userPassword
@@ -12,18 +12,32 @@ class Password(object):
 		self.score = 0
 
 	def getDictionary(self):
-		self.dictionary = [] 
+		self.dictionary = []
 		self.weakDictionary = []
 
+		number = 1
 		with open("passwords.txt", "r") as inputFile:
 			for line in inputFile:
 				line = line.strip() # strip endl char
+				if number > 16:
+					if len(line) < 8: self.weakDictionary.append(line) # these are words that aren't long enough 
+					self.dictionary.append(line)
+				number+=1
 
-				if len(line) < 8: self.weakDictionary.append(line) # these are words that aren't long enough 
-				self.dictionary.append(line)
 
-		print("weak: {}".format(len(self.weakDictionary)))
-		print("strong: {}".format(len(self.dictionary)))
+	def getIndexedDictionary(self):
+		self.dictionary = {1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], "long":[]} # I broke the dictionary up by length as opposed to first char
+
+		number = 1
+		with open("passwords.txt", "r") as inputFile:
+			for line in inputFile:
+				line = line.strip() # strip endl char
+				if number > 16:
+
+					if len(line) <=10:	self.dictionary[len(line)].append(line)
+					else:	self.dictionary["long"].append(line)
+				
+				number+=1
 
 	def getWeakDictionary(self):
 		self.weakDictionary = []
@@ -34,7 +48,13 @@ class Password(object):
 	def isCommonWord(self): # Brute force method. This is order of n at worse but it's 1 line :)
 		return True if self.userPassword in self.dictionary else False
 
-	def isLongEnough(self):#
+	def isCommonWordInDictionary(self):
+		if len(self.userPassword) <= 10:
+			return True if self.userPassword in self.dictionary[len(self.userPassword)] else False
+		else:
+			return True if self.userPassword in self.dictionary["long"] else False
+
+	def isLongEnough(self):# not actually used at this point
 		return True if self.length >= 8 else False
 
 	def countUppercase(self):
@@ -93,7 +113,6 @@ class Password(object):
 	def onlyLetters(self):
 		deduction = 0
 		noSpaces = self.userPassword.replace(' ', '')
-		print(len(noSpaces) , " ", self.uppercase + self.lowercase)
 		#if self.symbols + self.numbers == 0: # This is how I think the web version is doing this... counting spaces as letters
 		if len(noSpaces) == self.uppercase + self.lowercase: # The web version counts spaces as letters which I consider to be broken. This will not count spaces as letters
 			deduction = self.length
@@ -123,15 +142,12 @@ class Password(object):
 			if charExists: 
 				numRepChar+=1
 				numUniqueChar = len(noSpaces) - numRepChar;
-				##numRepititionIncrement = (nUnqChar) ? Math.ceil(nRepInc/nUnqChar) : Math.ceil(nRepInc)
 
 				if numUniqueChar != 0:
 					numRepititionIncrement = numUniqueChar
 					math.ceil(numRepititionIncrement/numUniqueChar)
 
 				else: math.ceil(numRepititionIncrement)
-
-			print("num Rep = ".format(numRepititionIncrement))
 		
 		return numRepititionIncrement
 
@@ -222,34 +238,42 @@ class Password(object):
 		print("Sequential Numbers: {}".format(self.sequentialNumbers))
 		print("Sequential Symbols: {}".format(self.sequentialSymbols))
 
-
+	def printScore(self):
 		print("SCORE: {}".format(self.score))
 
 	def calculateScore(self):
 		#Score based off of web calculator found at http://www.passwordmeter.com
+		#Alterations include checking against a dictionary and not treating spaces as lowercase letters
+		#Scores will vary from web version with certain passwords do to changes
 
 		self.score = 0
-		
 		self.getProperties()
 
-		#Additions
-		self.score += self.length*4 # length score
-		self.score += (self.length - self.uppercase)*2 # uppercase score
-		self.score += (self.length - self.lowercase)*2 # lowercase score
-		self.score += self.numbers*4 # numbers score
-		self.score += self.symbols*6 # symbols score
-		self.score += self.middleSpecials*2 # middle numbers/symbols score
-		self.score += self.middleSpecials*2 # middle numbers/symbols score
-		if self.requirements >= 4: # this bonus only counts if 4 or more requirements are met
-			self.score += self.requirements*2
+		if self.isCommonWordInDictionary():
+			print("{} is a common word!".format(self.userPassword))
+			self.score = 0
 
-		#Deductions
-		self.score -= self.lettersOnly
-		self.score -= self.numbersOnly
-		self.score -= self.repeats
-		self.score -= self.consecutiveUpper*2
-		self.score -= self.consecutiveLower*2
-		self.score -= self.consecutiveNum*2
-		self.score -= self.sequentialLetters*3
-		self.score -= self.sequentialNumbers*3
-		self.score -= self.sequentialSymbols*3
+		else:
+			#Additions
+			self.score += self.length*4 # length score
+			self.score += (self.length - self.uppercase)*2 # uppercase score
+			self.score += (self.length - self.lowercase)*2 # lowercase score
+			self.score += self.numbers*4 # numbers score
+			self.score += self.symbols*6 # symbols score
+			self.score += self.middleSpecials*2 # middle numbers/symbols score
+			self.score += self.middleSpecials*2 # middle numbers/symbols score
+			if self.requirements >= 4: # this bonus only counts if 4 or more requirements are met
+				self.score += self.requirements*2
+
+			#Deductions
+			self.score -= self.lettersOnly
+			self.score -= self.numbersOnly
+			self.score -= self.repeats
+			self.score -= self.consecutiveUpper*2
+			self.score -= self.consecutiveLower*2
+			self.score -= self.consecutiveNum*2
+			self.score -= self.sequentialLetters*3
+			self.score -= self.sequentialNumbers*3
+			self.score -= self.sequentialSymbols*3
+
+		if self.score < 0: self.score = 0 # don't return negative score. If the password has more deductions then 0 it out
